@@ -2,7 +2,7 @@
 """
     This midi script allows for communications between FLahk and FL Studio using midi messages.
     device_1 does unidirectional communication (FLahk to FL Studio)
-    device_2 does bidirectional communication FLahk asks questions to FL Studio, which answers back
+    device_2 does bidirectional communication. FLahk asks questions to FL Studio, which answers back
 """
 import device, midi, mixer, patterns, transport, channels
 import time
