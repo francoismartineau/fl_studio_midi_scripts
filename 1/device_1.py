@@ -66,6 +66,7 @@ def save_load_song_pos(save_load):
 def deselect_all_channels(_):
     channels.deselectAll()
 
+
 functions = {
     126 : set_pattern,
     125 : set_mixer_track_route,

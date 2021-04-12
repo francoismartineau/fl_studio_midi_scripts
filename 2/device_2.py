@@ -22,7 +22,8 @@ def get_pattern(_):
 def get_mixer_track(_):
     n = mixer.trackNumber()
     print("get_mixer_track:", n)
-    return n  
+    return n
+
 
 functions = {
     50 : test_FL,
