@@ -1,13 +1,6 @@
-# name=2
-"""
-    This midi script allows for communications between FLahk and FL Studio using midi messages.
-    device_1 does unidirectionnal communication (FLahk to FL Studio)
-    device_2 does bidirectional communication. FLahk asks questions to FL Studio, which answers back
-"""
+# name=Oxygen 25
 import device, midi, mixer, patterns, transport, channels
 import time
-
-global transport_flush_time
 
 # ----------------------------------------------------------
 def test_FL(_):
@@ -44,7 +37,7 @@ def OnMidiMsg(event):
             print("----------------------------")
             answer = functions[func](param)
             send(answer)
-        #print_event(event)
+        print_event(event)
 
 
 

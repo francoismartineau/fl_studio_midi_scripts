@@ -1,8 +1,11 @@
-# name=1
+# name=AHK_TO_FL
 """
     This midi script allows for communications between FLahk and FL Studio using midi messages.
-    device_1 does unidirectional communication (FLahk to FL Studio)
-    device_2 does bidirectional communication. FLahk asks questions to FL Studio, which answers back
+    Some functions return midi responses to FLahk. To allow this:
+    .Create a loopBack midi port named FL_TO_AHK
+    .In FL Midi settings, disable it from the inputs
+    .Meanwhile, the current loopBack midi port (AHK_TO_FL) should be enabled in the inputs and given a port number
+    .In the outputs, give FL_TO_AHK the same port number as AHK_TO_FL. Give no port to AHK_TO_FL.
 """
 import device, midi, mixer, patterns, transport, channels
 import time
@@ -10,7 +13,7 @@ import time
 global transport_flush_time
 transport_flush_time = time.time()
 
-# ----------------------------------------------------------
+# -- Unidirectionnal funcs --------------------------------------------------------
 def set_pattern(n):
     if type(n) is str and n.isdigit():
         n = int(n)
@@ -66,34 +69,62 @@ def save_load_song_pos(save_load):
 def deselect_all_channels(_):
     channels.deselectAll()
 
+# -- Bidirectionnal funcs --------------------------------------------------------
+def test_FL(_):
+    print("test_FL")
+    return 49
+
+def get_pattern(_):
+    p = patterns.patternNumber()
+    print("get_pattern:", p)
+    return p
+
+def get_mixer_track(_):
+    n = mixer.trackNumber()
+    print("get_mixer_track:", n)
+    return n
+
+def get_bpm(_):
+    bpm = mixer.getCurrentTempo(1)
+    bpm = int(bpm)
+    return bpm
+# ----
 
 functions = {
+    127 : get_pattern,
     126 : set_pattern,
     125 : set_mixer_track_route,
+    124 : get_mixer_track,
     123 : set_mixer_track,
     122 : toggle_play_pause_twice,
     121 : stop,
     120 : toggle_rec,
     119 : toggle_play_pause,
     118 : save_load_song_pos,
-    117 : deselect_all_channels
+    117 : deselect_all_channels,
+    116 : get_bpm,
+    #115 : used to communicate with pd,
+    
+    50 : test_FL,
 }
 
 # ----------------------------------------------------------
 def OnMidiMsg(event):
     global functions
     if (not event.handled): 
-        
         chan = event.midiChan + 1
         if chan == 15:
             event.handled = True
             func = event.controlNum
             param = event.controlVal
             print("----------------------------")
-            functions[func](param)
+            answer = functions[func](param)
+            if (answer is not None):
+                send(answer)
         elif chan == 16 or (chan < 15 and time_since_transport_flush() < .1):
             event.handled = True
-        print_event(event)
+        else:
+            print_event(event)
 
 # ------------------------------------------------------
 def set_transport_flush_time():
@@ -117,5 +148,16 @@ def print_event(event):
 def rand(min, max):
     seed = time.time()
     return min + int((seed *  761) % 997) % (max - min)
+
+def send(answer):
+    # 0xB : it's a cc message
+    # 0x F: sent on chan 16
+    # 127 : cc 127
+    print("-> Chan 16, CC 127, VAL " + str(answer))
+    sendMidiBytes(0xBF, 127, answer)
+
+def sendMidiBytes(byte1, byte2, byte3):
+    msg = byte1 + (byte2 << 8) + (byte3 << 16)
+    device.midiOutMsg(msg)
 
 print("-----------------------------------------------" + "|" * rand(1, 10))
